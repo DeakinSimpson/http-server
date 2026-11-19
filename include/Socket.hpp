@@ -100,9 +100,13 @@ namespace http_server
         static void getaddrinfo_safe(const char* host, const char* service,
             const addrinfo* hints, addrinfo** result)
         {
-            if (getaddrinfo(host, service, hints, result) != 0)
+            if (const int status = getaddrinfo(host, service, hints, result);
+                status != 0)
             {
-                throw std::runtime_error("Failed to getaddrinfo()");
+                std::cerr << "getaddrinfo failed: "
+                          << gai_strerror(status) << '\n';
+
+                throw std::runtime_error("getaddrinfo failed");
             }
         }
 
