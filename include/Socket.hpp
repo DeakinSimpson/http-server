@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <netdb.h>
+#include <ErrorHandle.hpp>
 
 constexpr int BACKLOG_SIZE { 1024 };
 
@@ -49,13 +50,19 @@ namespace http_server
                 address = address->ai_next)
             {
                 /* create socket descriptor */
-                if ((listen_fd = socket(
-                    address->ai_family,
-                    address->ai_socktype,
-                    address->ai_protocol)
-                    ) < 0)
+                try
                 {
-                    /* if fails, go to next in list */
+                    listen_fd = system_error_handle(
+                        &socket,
+                        "socket failed",
+                        address->ai_family,
+                        address->ai_socktype,
+                        address->ai_protocol
+                    );
+                }
+                catch (const std::system_error& e)
+                {
+                    std::cerr << e.what() << '\n';
                     continue;
                 }
 
@@ -95,33 +102,6 @@ namespace http_server
             }
 
             return listen_fd;
-        }
-
-        template <typename F, typename... Args>
-        static void system_error_handle(F&& func,
-            const std::string& error_msg, Args&&... args)
-        {
-            /**
-             * i was getting some really wiered errors, so i needed to use
-             * std::invoke to call the function, none of the errors actually
-             * caused runtime or compiletime errors but clang did not like it
-             */
-            const auto status {
-                std::invoke(std::forward<F>(func),
-                std::forward<Args>(args)...)
-            };
-
-            if (status == -1)
-            {
-                const int error_code { errno };
-                std::cerr << error_msg << ": " << strerror(error_code) << '\n';
-
-                throw std::system_error(
-                    error_code,
-                    std::generic_category(),
-                    error_msg
-                );
-            }
         }
 
         static void getaddrinfo_safe(const char* host, const char* service,

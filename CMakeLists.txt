@@ -8,7 +8,9 @@ add_executable(http_server
         src/Socket.cpp
         include/Socket.hpp
         include/Socket.hpp
-        include/Debug.h)
+        include/Debug.hpp
+        include/ErrorHandle.hpp
+        include/ErrorHandle.hpp)
 
 include_directories(http_server PRIVATE include)
 
