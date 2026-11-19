@@ -11,3 +11,9 @@ add_executable(http_server
         include/Debug.h)
 
 include_directories(http_server PRIVATE include)
+
+target_compile_options(http_server PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+)

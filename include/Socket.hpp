@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <cstring>
 #include <iostream>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -35,8 +36,9 @@ namespace http_server
             int         opt_val { 1 };
 
             /* set the hits to use for getting the address */
+            hints.ai_family = AF_UNSPEC;                /* allow IPv4 & IPv6 */
             hints.ai_socktype = SOCK_STREAM;            /* accept connections */
-            hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;/* on any IP addr */
+            hints.ai_flags = AI_PASSIVE;                /* on any IP addr */
             hints.ai_flags |= AI_NUMERICSERV;           /* using port num */
 
             /* get the list of addresses */
@@ -65,11 +67,10 @@ namespace http_server
                     sizeof(int));
 
                 /* bind the file descriptor to the address */
-                if (bind(listen_fd, address->ai_addr, address->ai_addrlen) == 0)
+                if (bind_safe(listen_fd, address))
                 {
                     /* successfully bind*/
                     print_addrinfo(address);
-
                     break;
                 }
 
@@ -150,6 +151,20 @@ namespace http_server
                 std::cout << "(family: " <<
                     ((addr_info->ai_family == AF_INET6) ? "IPv6" : "IPv4")
                     << ")\n";
+            }
+        }
+
+        static bool bind_safe(int listen_fd, const addrinfo* address)
+        {
+            if (bind(listen_fd, address->ai_addr, address->ai_addrlen) == 0)
+            {
+                return true;
+            }
+            else
+            {
+                std::cerr << "bind failed: " << strerror(errno) << '\n';
+
+                return false;
             }
         }
     };
