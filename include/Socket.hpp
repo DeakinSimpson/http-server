@@ -97,6 +97,25 @@ namespace http_server
             return listen_fd;
         }
 
+        template <typename F, typename... Args>
+        static void system_error_handle(F&& func, int success_status,
+            const std::string& error_msg, Args&&... args)
+        {
+            const int status { func(std::forward<Args>(args)...) };
+            const int error_code { errno };
+
+            if (status != success_status)
+            {
+                std::cerr << error_msg << ": " << strerror(error_code) << '\n';
+
+                throw std::system_error(
+                    error_code,
+                    std::generic_category(),
+                    error_msg
+                );
+            }
+        }
+
         static void getaddrinfo_safe(const char* host, const char* service,
             const addrinfo* hints, addrinfo** result)
         {
@@ -113,21 +132,8 @@ namespace http_server
         static void setsockopt_safe(int socket, int level, int option_name,
             const void *option_value, socklen_t option_len)
         {
-            if (const int status {
-                setsockopt(socket, level, option_name, option_value, option_len)};
-                status != 0)
-            {
-                const int error_code = errno;
-
-                std::cerr << "setsockopt failed: "
-                          << strerror(error_code) << '\n';
-
-                throw std::system_error(
-                    error_code,
-                    std::generic_category(),
-                    "setsockopt failed"
-                );
-            }
+            system_error_handle(setsockopt, 0, "setsockopt failed",
+                socket, level, option_name, option_value, option_len);
         }
 
         static void close_safe(int file_descriptor)
@@ -174,12 +180,9 @@ namespace http_server
             {
                 return true;
             }
-            else
-            {
-                std::cerr << "bind failed: " << strerror(errno) << '\n';
 
-                return false;
-            }
+            std::cerr << "bind failed: " << strerror(errno) << '\n';
+            return false;
         }
     };
 }
