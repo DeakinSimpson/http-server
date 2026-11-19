@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <iostream>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <stdexcept>
@@ -63,6 +64,8 @@ namespace http_server
                 if (bind(listen_fd, p->ai_addr, p->ai_addrlen) == 0)
                 {
                     /* successfully bind*/
+                    print_addrinfo(p);
+
                     break;
                 }
 
@@ -127,6 +130,22 @@ namespace http_server
             if (file_descriptor_ == -1)
             {
                 throw std::runtime_error("File Descriptor failed");
+            }
+        }
+
+        static void print_addrinfo(const addrinfo* addr_info)
+        {
+            char host[NI_MAXHOST];
+            char service[NI_MAXSERV];
+
+            if (getnameinfo(addr_info->ai_addr, addr_info->ai_addrlen,
+                host, sizeof(host), service, sizeof(service),
+                NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+            {
+                std::cout << "listening on [" << host << "]:" << service;
+                std::cout << "(family: " <<
+                    ((addr_info->ai_family == AF_INET6) ? "IPv6" : "IPv4")
+                    << ")\n";
             }
         }
     };
