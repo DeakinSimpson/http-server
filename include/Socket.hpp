@@ -113,10 +113,20 @@ namespace http_server
         static void setsockopt_safe(int socket, int level, int option_name,
             const void *option_value, socklen_t option_len)
         {
-            if (setsockopt(socket, level, option_name, option_value, option_len)
-                != 0)
+            if (const int status {
+                setsockopt(socket, level, option_name, option_value, option_len)};
+                status != 0)
             {
-                throw std::runtime_error("setsockopt Failed!");
+                const int error_code = errno;
+
+                std::cerr << "setsockopt failed: "
+                          << strerror(error_code) << '\n';
+
+                throw std::system_error(
+                    error_code,
+                    std::generic_category(),
+                    "setsockopt failed"
+                );
             }
         }
 
