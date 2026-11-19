@@ -29,25 +29,29 @@ namespace http_server
         static int open_listen_fd(const char* port)
         {
             addrinfo    hints {};
-            addrinfo*   listp;
-            addrinfo*   p;
+            addrinfo*   addr_list;
+            addrinfo*   address;
             int         listen_fd { -1 };
             int         opt_val { 1 };
 
             /* set the hits to use for getting the address */
-            hints.ai_socktype = SOCK_STREAM;             /* accept connections */
-            hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG; /* on any IP addr */
-            hints.ai_flags |= AI_NUMERICSERV;            /* using port num */
+            hints.ai_socktype = SOCK_STREAM;            /* accept connections */
+            hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;/* on any IP addr */
+            hints.ai_flags |= AI_NUMERICSERV;           /* using port num */
 
             /* get the list of addresses */
-            getaddrinfo_safe(nullptr, port, &hints, &listp);
+            getaddrinfo_safe(nullptr, port, &hints, &addr_list);
 
             /* go over each item in the linked list until the fd binds */
-            for (addrinfo* p { listp }; p != nullptr; p = p->ai_next)
+            for (address = addr_list; address != nullptr;
+                address = address->ai_next)
             {
                 /* create socket descriptor */
-                if ((listen_fd =
-                    socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
+                if ((listen_fd = socket(
+                    address->ai_family,
+                    address->ai_socktype,
+                    address->ai_protocol)
+                    ) < 0)
                 {
                     /* if fails, go to next in list */
                     continue;
@@ -61,10 +65,10 @@ namespace http_server
                     sizeof(int));
 
                 /* bind the file descriptor to the address */
-                if (bind(listen_fd, p->ai_addr, p->ai_addrlen) == 0)
+                if (bind(listen_fd, address->ai_addr, address->ai_addrlen) == 0)
                 {
                     /* successfully bind*/
-                    print_addrinfo(p);
+                    print_addrinfo(address);
 
                     break;
                 }
@@ -74,10 +78,10 @@ namespace http_server
             }
 
             /* clean up */
-            freeaddrinfo_safe(listp);
+            freeaddrinfo_safe(addr_list);
 
             /* no address worked */
-            if (!p)
+            if (!address)
             {
                 return -1;
             }
