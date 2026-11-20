@@ -7,6 +7,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#include "Debug.hpp"
 #include "ErrorHandle.hpp"
 
 namespace http_server
@@ -23,7 +24,7 @@ namespace http_server
         std::array<char, BUFFER_SIZE>   buffer              {};
     };
 
-    static void io_init(IOData& data, int file_descriptor)
+    static void io_init(IOData& data, const int file_descriptor)
     {
         data.file_descriptor = file_descriptor;
         data.unread_bytes_count = 0;
@@ -39,7 +40,14 @@ namespace http_server
 
             if (data.unread_bytes_count < 0)
             {
-                if (errno != EINTR) { return -1; }
+                const int error_code { errno };
+                if (error_code != EINTR)
+                {
+                    std::cerr << "buffer read error: " << strerror(error_code)
+                        << std::endl;
+
+                    return -1;
+                }
             }
             else if (data.unread_bytes_count == 0) /* EOF */
             {
@@ -63,38 +71,54 @@ namespace http_server
         return bytes_read;
     }
 
-    static ssize_t io_readline(IOData& data, void* user_buffer, size_t max_length)
+    static ssize_t io_readline(IOData& data, char* user_buffer, size_t max_length)
     {
-        int     i;
+
+        size_t  i;
         int     read_count;
-        char    c           {};
-        char*   buffer      { static_cast<char*>(user_buffer) };
+        char    c;
 
         for (i = 1; i < max_length; ++i)
         {
-            switch (io_read(data, &c, 1))
+            if ((read_count = io_read(data, &c, 1)) == 1)
             {
-            case 1:
-                *buffer++ = c;
+                *user_buffer++ = c;
 
                 if (c == '\n')
                 {
                     ++i;
                     break;
                 }
-            case 0:
+            }
+            else if (read_count == 0)
+            {
                 if (i == 1)
                 {
                     return 0; /* EOF no data read */
                 }
                 break; /* EOF > 0 bytes read */
-            default:
+            }
+            else
+            {
                 return -1;
             }
         }
 
-        *buffer = 0;
+        *user_buffer     = 0;
         return i - 1;
+    }
+
+    static std::size_t trim_crlf(char* buffer, size_t length)
+    {
+        /* remove /r/n from the end of the http line */
+        while (length > 0 && buffer[length - 1] == '\n'
+            || buffer[length - 1] == '\r')
+        {
+            buffer[--length] = '\0';
+        }
+
+        /* return the new length of the buffer */
+        return length;
     }
 
     static void getnameinfo_safe(

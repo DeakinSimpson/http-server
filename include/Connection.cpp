@@ -25,6 +25,34 @@ namespace http_server
             client_info_.port, MAX_LINE, 0);
     }
 
+    void Connection::read()
+    {
+        io_init(client_info_.buffer_data, client_info_.file_descriptor);
+
+        char* line { client_info_.buffer.data() };
+
+        ssize_t num_bytes { io_readline(client_info_.buffer_data,
+            client_info_.buffer.data(), MAX_LINE) };
+
+        if (num_bytes < 0)
+        {
+            throw std::runtime_error("read error");
+        }
+        if (num_bytes == 0)
+        {
+            std::cout << "client connection close\n";
+            return;
+        }
+
+        std::size_t length
+            { trim_crlf(line, static_cast<std::size_t>(num_bytes)) };
+
+        if (length == 0)
+        {
+            std::cout << "end of headers\n";
+        }
+    }
+
     void Connection::close() const
     {
         close_safe(client_info_.file_descriptor);
