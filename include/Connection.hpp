@@ -25,9 +25,12 @@ namespace http_server
     {
         ConnectionInfo client_info_;
     public:
+        Connection();
+
         void accept(const Socket& socket);
         void print_client_socket() const;
         void close() const;
-        void read();
+        void read_line();
+        void print_buffer() const;
     };
 }

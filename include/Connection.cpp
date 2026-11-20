@@ -8,6 +8,10 @@
 
 namespace http_server
 {
+    Connection::Connection()
+    {
+    }
+
     void Connection::accept(const Socket& socket)
     {
         client_info_.length = sizeof(client_info_.address);
@@ -23,14 +27,13 @@ namespace http_server
         getnameinfo_safe(reinterpret_cast<sockaddr*>(&client_info_.address),
             client_info_.length, client_info_.hostname, MAX_LINE,
             client_info_.port, MAX_LINE, 0);
+
+        /* initialize io for reading */
+        io_init(client_info_.buffer_data, client_info_.file_descriptor);
     }
 
-    void Connection::read()
+    void Connection::read_line()
     {
-        io_init(client_info_.buffer_data, client_info_.file_descriptor);
-
-        char* line { client_info_.buffer.data() };
-
         ssize_t num_bytes { io_readline(client_info_.buffer_data,
             client_info_.buffer.data(), MAX_LINE) };
 
@@ -45,7 +48,8 @@ namespace http_server
         }
 
         std::size_t length
-            { trim_crlf(line, static_cast<std::size_t>(num_bytes)) };
+            { trim_crlf(client_info_.buffer.data(),
+                static_cast<std::size_t>(num_bytes)) };
 
         if (length == 0)
         {
@@ -62,5 +66,10 @@ namespace http_server
     {
         std::cout << "Accepted Connection from (" << client_info_.hostname;
         std::cout << ", " << client_info_.port << ")" << '\n';
+    }
+
+    void Connection::print_buffer() const
+    {
+        std::cout << client_info_.buffer.data() << std::endl;
     }
 }

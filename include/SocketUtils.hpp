@@ -111,8 +111,8 @@ namespace http_server
     static std::size_t trim_crlf(char* buffer, size_t length)
     {
         /* remove /r/n from the end of the http line */
-        while (length > 0 && buffer[length - 1] == '\n'
-            || buffer[length - 1] == '\r')
+        while (length > 0 && (buffer[length - 1] == '\n'
+            || buffer[length - 1] == '\r'))
         {
             buffer[--length] = '\0';
         }
