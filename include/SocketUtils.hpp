@@ -61,15 +61,41 @@ namespace http_server
 
         /* return the number of bytes read */
         return bytes_read;
-
     }
 
-    // static ssize_t io_buffer_readline(IOData& data, void* user_buffer,
-    //     size_t max_length)
-    // {
-    //     int i;
-    //     int
-    // }
+    static ssize_t io_readline(IOData& data, void* user_buffer, size_t max_length)
+    {
+        int     i;
+        int     read_count;
+        char    c           {};
+        char*   buffer      { static_cast<char*>(user_buffer) };
+
+        for (i = 1; i < max_length; ++i)
+        {
+            switch (io_read(data, &c, 1))
+            {
+            case 1:
+                *buffer++ = c;
+
+                if (c == '\n')
+                {
+                    ++i;
+                    break;
+                }
+            case 0:
+                if (i == 1)
+                {
+                    return 0; /* EOF no data read */
+                }
+                break; /* EOF > 0 bytes read */
+            default:
+                return -1;
+            }
+        }
+
+        *buffer = 0;
+        return i - 1;
+    }
 
     static void getnameinfo_safe(
         const sockaddr*     socket_address,
