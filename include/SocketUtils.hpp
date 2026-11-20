@@ -13,6 +13,18 @@ namespace http_server
 {
     constexpr int BACKLOG_SIZE { 1024 };
 
+    static void getnameinfo_safe(
+        const sockaddr*     socket_address,
+        socklen_t           socket_address_length,
+        char*               host,                   size_t host_length,
+        char*               service,                size_t service_length,
+        int                 flags)
+    {
+        system_error_handle(getnameinfo, "getnameinfo failed",
+            socket_address, socket_address_length, host, host_length, service,
+            service_length, flags);
+    }
+
     static void getaddrinfo_safe(const char* host, const char* service,
             const addrinfo* hints, addrinfo** result)
     {
