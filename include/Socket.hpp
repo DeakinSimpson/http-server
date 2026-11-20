@@ -3,16 +3,7 @@
 //
 
 #pragma once
-#include <cstring>
-#include <iostream>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <stdexcept>
-#include <unistd.h>
-#include <netdb.h>
-#include <ErrorHandle.hpp>
-
-constexpr int BACKLOG_SIZE { 1024 };
+#include "SocketUtils.hpp"
 
 namespace http_server
 {
@@ -27,8 +18,10 @@ namespace http_server
             check_fd_succeeded();
         }
 
+        [[nodiscard]] int get_file_descriptor() const
+            { return file_descriptor_; }
+
     private:
-        static int open_listen_fd(const char* port);
         void check_fd_succeeded() const;
     };
 }

@@ -10,7 +10,11 @@ add_executable(http_server
         include/Socket.hpp
         include/Debug.hpp
         include/ErrorHandle.hpp
-        include/ErrorHandle.hpp)
+        include/ErrorHandle.hpp
+        src/WebServer.cpp
+        include/WebServer.hpp
+        include/WebServer.hpp
+        include/SocketUtils.hpp)
 
 include_directories(http_server PRIVATE include)
 
