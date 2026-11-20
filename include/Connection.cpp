@@ -73,8 +73,44 @@ namespace http_server
         std::cout << client_info_.buffer.data() << std::endl;
     }
 
+    http::RequestLine Connection::get_request_line()
+    {
+        /* read the request line into the buffer */
+        read_line();
+
+        /* use a string_view to represent the buffer */
+        std::string_view buffer_sv(client_info_.buffer.data(),
+            client_info_.buffer.size());
+
+        std::size_t i { 0 };
+        while (i < buffer_sv.size())
+        {
+            /* skip the leading white spaces */
+            while (i < buffer_sv.size() && std::isspace(buffer_sv[i]))
+            {
+                ++i;
+            }
+
+            /* get the start of the string view */
+            std::size_t start { i };
+
+            /* move until whitespace */
+            while (i < buffer_sv.size() && !std::isspace(buffer_sv[i]))
+            {
+                ++i;
+            }
+
+            std::cout << "method: " << buffer_sv.substr(start, i - start) << '\n';
+            break;
+        }
+
+        return {};
+    }
+
     std::unique_ptr<http::Message> Connection::get_request()
     {
+        http::RequestLine request_line { get_request_line() };
+
         return std::make_unique<http::Message>(http::Message());
     }
 }

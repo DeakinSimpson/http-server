@@ -35,5 +35,7 @@ namespace http_server
         void read_line();
         void print_buffer() const;
         std::unique_ptr<http::Message> get_request();
+    private:
+        http::RequestLine get_request_line();
     };
 }
