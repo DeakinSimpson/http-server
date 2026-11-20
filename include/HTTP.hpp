@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <variant>
+#include <vector>
 
 namespace http_server::http
 {
@@ -231,6 +232,9 @@ namespace http_server::http
     struct Message
     {
         std::variant<RequestLine, StatusLine> start_line;
+        /* allows for no copying when reading the headers */
+        std::vector<std::pair<std::string_view, std::string_view>> field_lines;
+        std::vector<std::byte> body;
     };
 
 
