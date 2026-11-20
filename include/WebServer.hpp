@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Connection.hpp"
 #include "Socket.hpp"
 
 namespace http_server
@@ -10,7 +11,7 @@ namespace http_server
     class WebServer
     {
         Socket socket_;
-        int connection_fd_ {};
+        Connection connection_ {};
     public:
         explicit WebServer(const char* port) : socket_{ port }
         {  }

@@ -2,13 +2,29 @@
 // Created by Deakin Simpson on 20/11/2026.
 //
 
-#ifndef HTTP_SERVER_CONNECTION_H
-#define HTTP_SERVER_CONNECTION_H
+#pragma once
+#include <sys/socket.h>
+#include <sys/_types/_socklen_t.h>
+#include "SocketUtils.hpp"
+#include "Socket.hpp"
 
-
-class Connection
+namespace http_server
 {
-};
+    struct ConnectionInfo
+    {
+        socklen_t           length                  {};
+        sockaddr_storage    address                 {};
+        char                hostname[MAX_LINE]      {};
+        char                port[MAX_LINE]          {};
+        int                 file_descriptor         {};
+    };
 
-
-#endif //HTTP_SERVER_CONNECTION_H
+    class Connection
+    {
+        ConnectionInfo client_info_;
+    public:
+        void accept(Socket& socket);
+        void print_client_socket();
+        void close();
+    };
+}

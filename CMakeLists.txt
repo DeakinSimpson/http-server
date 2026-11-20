@@ -14,7 +14,10 @@ add_executable(http_server
         src/WebServer.cpp
         include/WebServer.hpp
         include/WebServer.hpp
-        include/SocketUtils.hpp)
+        include/SocketUtils.hpp
+        include/Connection.cpp
+        include/Connection.hpp
+        include/Connection.hpp)
 
 include_directories(http_server PRIVATE include)
 

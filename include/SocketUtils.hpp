@@ -12,6 +12,7 @@
 namespace http_server
 {
     constexpr int BACKLOG_SIZE { 1024 };
+    static constexpr int MAX_LINE { 8192 }; /* 8kb */
 
     static void getnameinfo_safe(
         const sockaddr*     socket_address,

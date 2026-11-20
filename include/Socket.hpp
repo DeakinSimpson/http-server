@@ -16,6 +16,7 @@ namespace http_server
         {
             /* check that the file descriptor is open on a socket */
             check_fd_succeeded();
+
         }
 
         [[nodiscard]] int get_file_descriptor() const
