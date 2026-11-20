@@ -14,7 +14,7 @@ namespace http_server
 {
     static constexpr int BACKLOG_SIZE { 1024 };
     static constexpr int MAX_LINE { 8192 }; /* 8kb */
-    static constexpr int BUFFER_SIZE { 16000 };
+    static constexpr int BUFFER_SIZE { 32768 }; /* this is to match nginx */
 
     struct IOData
     {

@@ -17,7 +17,9 @@ add_executable(http_server
         include/SocketUtils.hpp
         include/Connection.cpp
         include/Connection.hpp
-        include/Connection.hpp)
+        include/Connection.hpp
+        src/HTTP.cpp
+        include/HTTP.hpp)
 
 include_directories(http_server PRIVATE include)
 
