@@ -23,8 +23,8 @@ namespace http_server
     {
         ConnectionInfo client_info_;
     public:
-        void accept(Socket& socket);
-        void print_client_socket();
-        void close();
+        void accept(const Socket& socket);
+        void print_client_socket() const;
+        void close() const;
     };
 }

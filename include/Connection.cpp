@@ -8,7 +8,7 @@
 
 namespace http_server
 {
-    void Connection::accept(Socket& socket)
+    void Connection::accept(const Socket& socket)
     {
         client_info_.length = sizeof(client_info_.address);
 
@@ -25,12 +25,12 @@ namespace http_server
             client_info_.port, MAX_LINE, 0);
     }
 
-    void Connection::close()
+    void Connection::close() const
     {
         close_safe(client_info_.file_descriptor);
     }
 
-    void Connection::print_client_socket()
+    void Connection::print_client_socket() const
     {
         std::cout << "Accepted Connection from (" << client_info_.hostname;
         std::cout << ", " << client_info_.port << ")" << '\n';
