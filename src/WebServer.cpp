@@ -16,6 +16,8 @@ namespace http_server
 
             connection_.print_client_socket();
 
+            socket_.read();
+
             /* close connection with client immediatly */
             connection_.close();
         }

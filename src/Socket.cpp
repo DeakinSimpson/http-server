@@ -14,4 +14,11 @@ namespace http_server
             throw std::runtime_error("File Descriptor failed");
         }
     }
+
+    void Socket::read()
+    {
+        io_init(buffer_data, file_descriptor_);
+
+
+    }
 }

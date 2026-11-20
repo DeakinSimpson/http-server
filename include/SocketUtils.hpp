@@ -11,8 +11,65 @@
 
 namespace http_server
 {
-    constexpr int BACKLOG_SIZE { 1024 };
+    static constexpr int BACKLOG_SIZE { 1024 };
     static constexpr int MAX_LINE { 8192 }; /* 8kb */
+    static constexpr int BUFFER_SIZE { 16000 };
+
+    struct IOData
+    {
+        int                             file_descriptor     {};
+        int                             unread_bytes_count  {};
+        char*                           next_byte           {};
+        std::array<char, BUFFER_SIZE>   buffer              {};
+    };
+
+    static void io_init(IOData& data, int file_descriptor)
+    {
+        data.file_descriptor = file_descriptor;
+        data.unread_bytes_count = 0;
+        data.next_byte = data.buffer.data(); /* next_byte start of buffer */
+    }
+
+    static ssize_t io_read(IOData& data, char* user_buffer, size_t n)
+    {
+        while (data.unread_bytes_count <= 0) /* fill the buffer */
+        {
+            data.unread_bytes_count = read(data.file_descriptor,
+                data.buffer.data(), sizeof(data.buffer.data()));
+
+            if (data.unread_bytes_count < 0)
+            {
+                if (errno != EINTR) { return -1; }
+            }
+            else if (data.unread_bytes_count == 0) /* EOF */
+            {
+                return 0;
+            }
+            else
+            {
+                data.next_byte = data.buffer.data();
+            }
+        }
+
+        /* copy data from data buffer to buffer */
+        int bytes_read = std::min(static_cast<int>(n), data.unread_bytes_count);
+        std::memcpy(user_buffer, data.next_byte, bytes_read);
+
+        /* set next byte to end of buffer and decrement the unread bytes */
+        data.next_byte += bytes_read;
+        data.unread_bytes_count -= bytes_read;
+
+        /* return the number of bytes read */
+        return bytes_read;
+
+    }
+
+    // static ssize_t io_buffer_readline(IOData& data, void* user_buffer,
+    //     size_t max_length)
+    // {
+    //     int i;
+    //     int
+    // }
 
     static void getnameinfo_safe(
         const sockaddr*     socket_address,
