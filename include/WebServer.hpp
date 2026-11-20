@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Connection.hpp"
+#include "HTTP.hpp"
 #include "Socket.hpp"
 
 namespace http_server
@@ -17,5 +18,6 @@ namespace http_server
         {  }
 
         void start();
+        void process_request(std::unique_ptr<http::Message> request);
     };
 }

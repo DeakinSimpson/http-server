@@ -4,6 +4,8 @@
 
 #include "../include/WebServer.hpp"
 
+#include "HTTP.hpp"
+
 namespace http_server
 {
     void WebServer::start()
@@ -16,6 +18,8 @@ namespace http_server
 
             connection_.print_client_socket();
 
+            process_request(connection_.get_request());
+
             connection_.read_line();
             connection_.print_buffer();
 
@@ -24,5 +28,8 @@ namespace http_server
         }
     }
 
+    void WebServer::process_request(std::unique_ptr<http::Message> request)
+    {
 
+    }
 }

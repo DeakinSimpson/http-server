@@ -72,4 +72,9 @@ namespace http_server
     {
         std::cout << client_info_.buffer.data() << std::endl;
     }
+
+    std::unique_ptr<http::Message> Connection::get_request()
+    {
+        return std::make_unique<http::Message>(http::Message());
+    }
 }

@@ -5,6 +5,8 @@
 #pragma once
 #include <sys/socket.h>
 #include <sys/_types/_socklen_t.h>
+
+#include "HTTP.hpp"
 #include "SocketUtils.hpp"
 #include "Socket.hpp"
 
@@ -32,5 +34,6 @@ namespace http_server
         void close() const;
         void read_line();
         void print_buffer() const;
+        std::unique_ptr<http::Message> get_request();
     };
 }
