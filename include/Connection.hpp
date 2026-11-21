@@ -37,6 +37,8 @@ namespace http_server
         std::size_t read_line();
         void print_buffer() const;
         std::unique_ptr<OptMsg> get_request();
+        std::optional<std::vector<std::pair<std::string, std::string>>>
+            get_field_lines();
     private:
         std::optional<http::RequestLine> get_request_line();
     };

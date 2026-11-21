@@ -51,11 +51,6 @@ namespace http_server
             { trim_crlf(client_info_.buffer.data(),
                 static_cast<std::size_t>(num_bytes)) };
 
-        if (length == 0)
-        {
-            std::cout << "end of headers\n";
-        }
-
         return length;
     }
 
@@ -77,16 +72,23 @@ namespace http_server
 
     /* TODO: Add bool option for remove whitespaces, separate from delimiter */
     static std::vector<std::string_view> get_buffer_elements(
-        std::string_view buffer, const char delimiter, const std::size_t bytes)
+        std::string_view buffer, const char delimiter, const std::size_t bytes,
+        const std::size_t no_white_space = 0, const int max_delimiter = INT_MAX)
     {
         std::size_t i { 0 };
         std::vector<std::string_view> result;
+        std::size_t result_size { 0 };
+        int cur_num_delimiter { 0 };
 
         while (i < bytes)
         {
             /* skip the leading white spaces */
             while (i < bytes && buffer[i] == delimiter)
             {
+                if (std::isspace(buffer[i]) && result_size < no_white_space)
+                {
+                    return {};
+                }
                 ++i;
             }
 
@@ -94,8 +96,12 @@ namespace http_server
             const auto start { i };
 
             /* get the index up until whitespace */
-            while (i < bytes && buffer[i] != delimiter)
+            while (i < bytes && (buffer[i] != delimiter || cur_num_delimiter >= max_delimiter))
             {
+                if (std::isspace(buffer[i]) && result_size < no_white_space)
+                {
+                    return {};
+                }
                 ++i;
             }
 
@@ -103,6 +109,8 @@ namespace http_server
             if (start < i)
             {
                 result.push_back(buffer.substr(start, i - start));
+                ++result_size;
+                ++cur_num_delimiter;
             }
         }
 
@@ -141,15 +149,67 @@ namespace http_server
             return std::nullopt;
         }
 
+        /* get the method from the first element */
         const auto method { parse_method(elements[0]) };
 
+        /* was the method given a valid method? */
         if (!method.has_value())
         {
             return std::nullopt;
         }
 
+        /* return the http::RequestLine */
         return http::RequestLine
             { method.value(), elements[1], elements[2] };
+    }
+
+    std::optional<std::vector<std::pair<std::string, std::string>>>
+    Connection::get_field_lines()
+    {
+        std::vector<std::pair<std::string, std::string>> result;
+
+        while (true)
+        {
+            const auto line_bytes { read_line() };
+            if (line_bytes == 0) break;
+
+            std::string_view line(client_info_.buffer.data(), line_bytes);
+
+            const auto colon { line.find(':') };
+
+            /* if unable to find colon, or no field-name */
+            if (colon == std::string_view::npos || colon == 0)
+            {
+                return std::nullopt;
+            }
+
+            /* get the field-name (everything before colon) */
+            std::string_view field_name { line.substr(0, colon) };
+
+            /* if field_name contains whitespaces, error */
+            if (field_name.find_first_of(" \t") != std::string_view::npos)
+            {
+                return std::nullopt;
+            }
+
+            /* get value after the name */
+            std::string_view value { line.substr(colon + 1) };
+
+            /* find first character that is not whitespace */
+            const auto first { value.find_first_not_of(" \t") };
+
+            /* find the last character that is not a whitespace */
+            const auto last  { value.find_last_not_of(" \t") };
+
+            /* if the first value is end of string, return empty */
+            value = (first == std::string_view::npos) ? std::string_view{}
+                : value.substr(first, last - first + 1);
+
+            /* emplace the pair into the vector */
+            result.emplace_back(std::string(field_name), std::string(value));
+        }
+
+        return result;
     }
 
     std::unique_ptr<OptMsg> Connection::get_request()
@@ -162,6 +222,15 @@ namespace http_server
             return std::make_unique<OptMsg>(std::nullopt);
         }
 
+        std::cout << "target: " << request_line->target << ", version: "
+            << request_line->version << std::endl;
+
+        const auto fields { get_field_lines() };
+
+        for (auto [key, value] : fields.value())
+        {
+            std::cout << key << ":" << value << std::endl;
+        }
 
         return std::make_unique<OptMsg>(http::Message());
     }
