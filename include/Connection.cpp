@@ -114,22 +114,16 @@ namespace http_server
      * @return a vector of elements retrieved from the line
      */
     static std::vector<std::string_view> get_buffer_elements(
-        std::string_view buffer, const char delimiter, const std::size_t bytes,
-        const std::size_t no_white_space = 0)
+        std::string_view buffer, const std::size_t bytes)
     {
         std::size_t i { 0 };
         std::vector<std::string_view> result;
-        std::size_t result_size { 0 };
 
         while (i < bytes)
         {
             /* skip the leading white spaces */
-            while (i < bytes && buffer[i] == delimiter)
+            while (i < bytes && std::isspace(buffer[i]))
             {
-                if (std::isspace(buffer[i]) && result_size < no_white_space)
-                {
-                    return {};
-                }
                 ++i;
             }
 
@@ -137,12 +131,8 @@ namespace http_server
             const auto start { i };
 
             /* get the index up until whitespace */
-            while (i < bytes && buffer[i] != delimiter)
+            while (i < bytes && !std::isspace(buffer[i]))
             {
-                if (std::isspace(buffer[i]) && result_size < no_white_space)
-                {
-                    return {};
-                }
                 ++i;
             }
 
@@ -150,7 +140,6 @@ namespace http_server
             if (start < i)
             {
                 result.push_back(buffer.substr(start, i - start));
-                ++result_size;
             }
         }
 
@@ -193,7 +182,7 @@ namespace http_server
         std::string_view buffer_sv(client_info_.buffer.data(),
             client_info_.buffer.size());
 
-        const auto elements { get_buffer_elements(buffer_sv, ' ', line_bytes) };
+        const auto elements { get_buffer_elements(buffer_sv, line_bytes) };
 
         /* if request line has more then 3 elements, drop */
         if (elements.size() != 3)
