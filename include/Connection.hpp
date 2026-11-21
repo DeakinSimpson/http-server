@@ -32,7 +32,7 @@ namespace http_server
         void accept(const Socket& socket);
         void print_client_socket() const;
         void close() const;
-        void read_line();
+        std::size_t read_line();
         void print_buffer() const;
         std::unique_ptr<http::Message> get_request();
     private:

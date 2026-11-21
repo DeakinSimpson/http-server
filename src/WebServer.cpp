@@ -20,8 +20,8 @@ namespace http_server
 
             process_request(connection_.get_request());
 
-            connection_.read_line();
-            connection_.print_buffer();
+            // connection_.read_line();
+            // connection_.print_buffer();
 
             /* close connection with client immediatly */
             connection_.close();

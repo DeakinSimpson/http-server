@@ -32,7 +32,7 @@ namespace http_server
         io_init(client_info_.buffer_data, client_info_.file_descriptor);
     }
 
-    void Connection::read_line()
+    std::size_t Connection::read_line()
     {
         ssize_t num_bytes { io_readline(client_info_.buffer_data,
             client_info_.buffer.data(), MAX_LINE) };
@@ -44,10 +44,10 @@ namespace http_server
         if (num_bytes == 0)
         {
             std::cout << "client connection close\n";
-            return;
+            return -1; /* use -1 to define end of file */
         }
 
-        std::size_t length
+        const std::size_t length
             { trim_crlf(client_info_.buffer.data(),
                 static_cast<std::size_t>(num_bytes)) };
 
@@ -55,6 +55,8 @@ namespace http_server
         {
             std::cout << "end of headers\n";
         }
+
+        return length;
     }
 
     void Connection::close() const
@@ -73,35 +75,54 @@ namespace http_server
         std::cout << client_info_.buffer.data() << std::endl;
     }
 
+    /* TODO: Add bool option for remove whitespaces, separate from delimiter */
+    static std::vector<std::string_view> get_buffer_elements(
+        std::string_view buffer, const char delimiter, const std::size_t bytes)
+    {
+        std::size_t i { 0 };
+        std::vector<std::string_view> result;
+
+        while (i < bytes)
+        {
+            /* skip the leading white spaces */
+            while (i < bytes && buffer[i] == delimiter)
+            {
+                ++i;
+            }
+
+            /* cache start of the string_view */
+            const auto start { i };
+
+            /* get the index up until whitespace */
+            while (i < bytes && buffer[i] != delimiter)
+            {
+                ++i;
+            }
+
+            /* this removes blank being pushed at end */
+            if (start < i)
+            {
+                result.push_back(buffer.substr(start, i - start));
+            }
+        }
+
+        return result;
+    }
+
     http::RequestLine Connection::get_request_line()
     {
         /* read the request line into the buffer */
-        read_line();
+        auto line_bytes { read_line() };
 
         /* use a string_view to represent the buffer */
         std::string_view buffer_sv(client_info_.buffer.data(),
             client_info_.buffer.size());
 
-        std::size_t i { 0 };
-        while (i < buffer_sv.size())
+        const auto elements { get_buffer_elements(buffer_sv, ' ', line_bytes) };
+
+        for (auto e : elements)
         {
-            /* skip the leading white spaces */
-            while (i < buffer_sv.size() && std::isspace(buffer_sv[i]))
-            {
-                ++i;
-            }
-
-            /* get the start of the string view */
-            std::size_t start { i };
-
-            /* move until whitespace */
-            while (i < buffer_sv.size() && !std::isspace(buffer_sv[i]))
-            {
-                ++i;
-            }
-
-            std::cout << "method: " << buffer_sv.substr(start, i - start) << '\n';
-            break;
+            std::cout << e << std::endl;
         }
 
         return {};
