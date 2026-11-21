@@ -109,7 +109,22 @@ namespace http_server
         return result;
     }
 
-    http::RequestLine Connection::get_request_line()
+    static constexpr std::optional<http::Method> parse_method(
+        const std::string_view method_sv)
+    {
+        if (method_sv == "GET") return http::Method::GET;
+        if (method_sv == "HEAD") return http::Method::HEAD;
+        if (method_sv == "POST") return http::Method::POST;
+        if (method_sv == "PUT") return http::Method::PUT;
+        if (method_sv == "DELETE") return http::Method::DELETE;
+        if (method_sv == "CONNECT") return http::Method::CONNECT;
+        if (method_sv == "OPTIONS") return http::Method::OPTIONS;
+        if (method_sv == "TRACE") return http::Method::TRACE;
+
+        return std::nullopt;
+    }
+
+    std::optional<http::RequestLine> Connection::get_request_line()
     {
         /* read the request line into the buffer */
         auto line_bytes { read_line() };
@@ -120,18 +135,34 @@ namespace http_server
 
         const auto elements { get_buffer_elements(buffer_sv, ' ', line_bytes) };
 
-        for (auto e : elements)
+        /* if request line has more then 3 elements, drop */
+        if (elements.size() != 3)
         {
-            std::cout << e << std::endl;
+            return std::nullopt;
         }
 
-        return {};
+        const auto method { parse_method(elements[0]) };
+
+        if (!method.has_value())
+        {
+            return std::nullopt;
+        }
+
+        return http::RequestLine
+            { method.value(), elements[1], elements[2] };
     }
 
-    std::unique_ptr<http::Message> Connection::get_request()
+    std::unique_ptr<OptMsg> Connection::get_request()
     {
-        http::RequestLine request_line { get_request_line() };
+        const auto request_line { get_request_line() };
 
-        return std::make_unique<http::Message>(http::Message());
+        /* if bad request line, return bad message */
+        if (!request_line.has_value())
+        {
+            return std::make_unique<OptMsg>(std::nullopt);
+        }
+
+
+        return std::make_unique<OptMsg>(http::Message());
     }
 }

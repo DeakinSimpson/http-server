@@ -28,7 +28,7 @@ namespace http_server
         }
     }
 
-    void WebServer::process_request(std::unique_ptr<http::Message> request)
+    void WebServer::process_request(std::unique_ptr<OptMsg> request)
     {
 
     }

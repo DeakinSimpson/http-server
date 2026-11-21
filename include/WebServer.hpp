@@ -18,6 +18,6 @@ namespace http_server
         {  }
 
         void start();
-        void process_request(std::unique_ptr<http::Message> request);
+        void process_request(std::unique_ptr<OptMsg> request);
     };
 }

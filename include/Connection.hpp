@@ -23,6 +23,8 @@ namespace http_server
         IOData                          buffer_data             {};
     };
 
+    using OptMsg = std::optional<http::Message>;
+
     class Connection
     {
         ConnectionInfo client_info_;
@@ -34,8 +36,8 @@ namespace http_server
         void close() const;
         std::size_t read_line();
         void print_buffer() const;
-        std::unique_ptr<http::Message> get_request();
+        std::unique_ptr<OptMsg> get_request();
     private:
-        http::RequestLine get_request_line();
+        std::optional<http::RequestLine> get_request_line();
     };
 }
