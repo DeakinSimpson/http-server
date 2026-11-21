@@ -12,6 +12,13 @@ namespace http_server
     {
     }
 
+    /**
+     * accepts incoming connections from the supplied socket and stores the file
+     * descriptor. performs getnameinfo_safe to get the host and the port.
+     * prepares the io (socket) for reading via io_init.
+     *
+     * @param socket the socket that will accept the connection
+     */
     void Connection::accept(const Socket& socket)
     {
         client_info_.length = sizeof(client_info_.address);
@@ -32,6 +39,19 @@ namespace http_server
         io_init(client_info_.buffer_data, client_info_.file_descriptor);
     }
 
+    /**
+     * reads line sockets buffer and stores it in client_info_.buffer.
+     *
+     * if there is an error reading the sockets buffer, throw std::runtime_error
+     *
+     * if the line is the EOF, return -1, as this is std::size_t this will cause
+     * underflow, but as the buffers max size is 32kb, we can safely assume that
+     * the numeric limits will never be reached.
+     *
+     * then the function will trim the crlf \r\n from the end of the line
+     *
+     * @return the number of bytes in the line after trimming \r\n
+     */
     std::size_t Connection::read_line()
     {
         ssize_t num_bytes { io_readline(client_info_.buffer_data,
@@ -54,31 +74,52 @@ namespace http_server
         return length;
     }
 
+    /**
+     * closes the Connections file descriptor
+     */
     void Connection::close() const
     {
         close_safe(client_info_.file_descriptor);
     }
 
+    /**
+     * prints the clients socket data, this is retrieved when connection is
+     * accepted in Connection::accept.
+     */
     void Connection::print_client_socket() const
     {
         std::cout << "Accepted Connection from (" << client_info_.hostname;
         std::cout << ", " << client_info_.port << ")" << '\n';
     }
 
+    /**
+     * prints the Connections buffer (this is not the buffer of the socket)
+     */
     void Connection::print_buffer() const
     {
         std::cout << client_info_.buffer.data() << std::endl;
     }
 
     /* TODO: Add bool option for remove whitespaces, separate from delimiter */
+
+    /**
+     * this function reads buffer, then splits the string_view into sub
+     * string_view's that are deliminated by delimiter and returns them as a
+     * vector.
+     *
+     * @param buffer the buffer the elements will be read from
+     * @param delimiter what char will be used to split the elements
+     * @param bytes number of bytes until end of line
+     * @param no_white_space how many word from 0 index that CANNOT have white spaces
+     * @return a vector of elements retrieved from the line
+     */
     static std::vector<std::string_view> get_buffer_elements(
         std::string_view buffer, const char delimiter, const std::size_t bytes,
-        const std::size_t no_white_space = 0, const int max_delimiter = INT_MAX)
+        const std::size_t no_white_space = 0)
     {
         std::size_t i { 0 };
         std::vector<std::string_view> result;
         std::size_t result_size { 0 };
-        int cur_num_delimiter { 0 };
 
         while (i < bytes)
         {
@@ -96,7 +137,7 @@ namespace http_server
             const auto start { i };
 
             /* get the index up until whitespace */
-            while (i < bytes && (buffer[i] != delimiter || cur_num_delimiter >= max_delimiter))
+            while (i < bytes && buffer[i] != delimiter)
             {
                 if (std::isspace(buffer[i]) && result_size < no_white_space)
                 {
@@ -110,28 +151,39 @@ namespace http_server
             {
                 result.push_back(buffer.substr(start, i - start));
                 ++result_size;
-                ++cur_num_delimiter;
             }
         }
 
         return result;
     }
 
+    /**
+     * Converts a string_view of the Method, from the buffer, and converts it
+     * to the corresponding enum.
+     *
+     * @param method_sv string_view of the input method
+     * @return http::Method associated with method_sv
+     */
     static constexpr std::optional<http::Method> parse_method(
         const std::string_view method_sv)
     {
-        if (method_sv == "GET") return http::Method::GET;
-        if (method_sv == "HEAD") return http::Method::HEAD;
-        if (method_sv == "POST") return http::Method::POST;
-        if (method_sv == "PUT") return http::Method::PUT;
-        if (method_sv == "DELETE") return http::Method::DELETE;
+        if (method_sv == "GET")     return http::Method::GET;
+        if (method_sv == "HEAD")    return http::Method::HEAD;
+        if (method_sv == "POST")    return http::Method::POST;
+        if (method_sv == "PUT")     return http::Method::PUT;
+        if (method_sv == "DELETE")  return http::Method::DELETE;
         if (method_sv == "CONNECT") return http::Method::CONNECT;
         if (method_sv == "OPTIONS") return http::Method::OPTIONS;
-        if (method_sv == "TRACE") return http::Method::TRACE;
+        if (method_sv == "TRACE")   return http::Method::TRACE;
 
         return std::nullopt;
     }
 
+    /**
+     * reads line from the socket, then converts the line into a RequestLine
+     *
+     * @return request line, if the request_line read was valid
+     */
     std::optional<http::RequestLine> Connection::get_request_line()
     {
         /* read the request line into the buffer */
