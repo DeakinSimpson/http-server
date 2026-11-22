@@ -6,6 +6,11 @@
 
 #include <iostream>
 
+/**
+ * this is a macro that runs only in DEBUG mode, this allows for me to add debug
+ * lines that do not run in release mode
+ */
+
 #ifdef NDEBUG
 #define DEBUG(x)
 #else
