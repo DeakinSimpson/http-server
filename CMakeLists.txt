@@ -7,16 +7,12 @@ add_executable(http_server
         src/main.cpp
         src/Socket.cpp
         include/Socket.hpp
-        include/Socket.hpp
         include/Debug.hpp
-        include/ErrorHandle.hpp
         include/ErrorHandle.hpp
         src/WebServer.cpp
         include/WebServer.hpp
-        include/WebServer.hpp
         include/SocketUtils.hpp
         src/Connection.cpp
-        include/Connection.hpp
         include/Connection.hpp
         src/HTTP.cpp
         include/HTTP.hpp)
