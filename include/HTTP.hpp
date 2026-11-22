@@ -219,7 +219,7 @@ namespace http_server::http
             case StatusCode::Gateway_Timeout:        return {504, "Gateway Timeout"};
             case StatusCode::HTTP_Version_Not_Supp:  return {505, "HTTP Version Not Supported"};
 
-        default:                                     return {500, "Unknown Status Code"};
+            default:                                 return {500, "Unknown Status Code"};
         }
     }
 
