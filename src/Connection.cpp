@@ -2,9 +2,9 @@
 // Created by Deakin Simpson on 20/11/2026.
 //
 
-#include "Connection.hpp"
+#include "../include/Connection.hpp"
 
-#include "Socket.hpp"
+#include "../include/Socket.hpp"
 
 namespace http_server
 {

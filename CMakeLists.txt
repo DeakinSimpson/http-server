@@ -15,7 +15,7 @@ add_executable(http_server
         include/WebServer.hpp
         include/WebServer.hpp
         include/SocketUtils.hpp
-        include/Connection.cpp
+        src/Connection.cpp
         include/Connection.hpp
         include/Connection.hpp
         src/HTTP.cpp
