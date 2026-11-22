@@ -204,6 +204,12 @@ namespace http_server
             { method.value(), elements[1], elements[2] };
     }
 
+    /**
+     * returns the fields from the http request. If there are any errors,
+     * return std::nullopt
+     *
+     * @return optionally a vector of field-name : field-value pairs
+     */
     std::optional<std::vector<std::pair<std::string, std::string>>>
     Connection::get_field_lines()
     {
@@ -253,6 +259,12 @@ namespace http_server
         return result;
     }
 
+    /**
+     * if the message has an error then the the pointer will point to a
+     * std::nullopt
+     *
+     * @return a pointer to an optional message
+     */
     std::unique_ptr<OptMsg> Connection::get_request()
     {
         const auto request_line { get_request_line() };

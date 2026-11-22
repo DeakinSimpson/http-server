@@ -4,8 +4,6 @@
 
 #pragma once
 #include <sys/socket.h>
-#include <sys/_types/_socklen_t.h>
-
 #include "HTTP.hpp"
 #include "SocketUtils.hpp"
 #include "Socket.hpp"
@@ -34,12 +32,13 @@ namespace http_server
         void accept(const Socket& socket);
         void print_client_socket() const;
         void close() const;
-        std::size_t read_line();
-        void print_buffer() const;
         std::unique_ptr<OptMsg> get_request();
-        std::optional<std::vector<std::pair<std::string, std::string>>>
-            get_field_lines();
+
     private:
         std::optional<http::RequestLine> get_request_line();
+        std::size_t read_line();
+        void print_buffer() const;
+        std::optional<std::vector<std::pair<std::string, std::string>>>
+            get_field_lines();
     };
 }
