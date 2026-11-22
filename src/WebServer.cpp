@@ -8,10 +8,13 @@
 
 namespace http_server
 {
+    /**
+     * starts the web servers loop
+     */
     void WebServer::start()
     {
         std::cout << "web server starting..." << std::endl;
-        while (1)
+        while (true)
         {
             /* accept the connection from the client */
             connection_.accept(socket_);
@@ -20,14 +23,16 @@ namespace http_server
 
             process_request(connection_.get_request());
 
-            // connection_.read_line();
-            // connection_.print_buffer();
-
-            /* close connection with client immediatly */
             connection_.close();
         }
     }
 
+    /**
+     * this function will take in a request then create a response or drop it
+     * based on its contents.
+     *
+     * @param request the request to be processed
+     */
     void WebServer::process_request(std::unique_ptr<OptMsg> request)
     {
 
