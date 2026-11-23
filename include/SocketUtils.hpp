@@ -370,4 +370,44 @@ namespace http_server
 
         return listen_fd;
     }
+
+    /**
+     *
+     * @param file_descriptor the fd where the bytes will be writen too
+     * @param user_buffer the bytes that will be written to fd
+     * @param num_bytes the number of bytes being written
+     * @return the number of bytes written (negative if error)
+     */
+    static ssize_t io_write(int file_descriptor, char* user_buffer,
+                         std::size_t num_bytes)
+    {
+        std::size_t remaining_bytes { num_bytes };
+        ssize_t bytes_written {};
+        char* buffer_ptr { user_buffer };
+
+        /* write until no remaining bytes */
+        while (remaining_bytes > 0)
+        {
+            if ((bytes_written =
+                write(file_descriptor, buffer_ptr, remaining_bytes)) <= 0)
+            { /* an error occured while writing */
+
+                /* if sig interrupt, rewrite */
+                if (errno == EINTR)
+                {
+                    return 0;
+                }
+
+                /* otherwise fail */
+                return -1;
+            }
+
+            /* decrement bytes */
+            remaining_bytes -= bytes_written;
+            buffer_ptr += bytes_written;
+        }
+
+        /* return bytes written */
+        return static_cast<ssize_t>(num_bytes);
+    }
 }
