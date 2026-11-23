@@ -49,6 +49,8 @@ namespace http_server
         if (method == http::Method::GET)
         {
             std::cout << "GET processing starting..." << std::endl;
+
+            bad_request(std::move(request));
         }
         else
         {
@@ -58,11 +60,27 @@ namespace http_server
 
     void WebServer::bad_request(std::unique_ptr<OptMsg> request)
     {
-        std::cout << "bad request" << std::endl;
+        char text[] {
+            "HTTP/1.1 400 Bad Request\r\n"
+            "Content-Type: application/json\r\n"
+            "Connection: close"
+            "Content-Length: 88\r\n"
+            "\r\n"
+            "{\r\n"
+            "  \"error\": \"Bad request\",\r\n"
+            "  \"message\": \"Request body could not be read properly.\"\r\n"
+            "}"
+        };
+
+        connection_.write(text, sizeof(text) - 1);
     }
 
     void WebServer::not_implemented(std::unique_ptr<OptMsg> request)
     {
-        std::cout << "not implemented" << std::endl;
+        char text[] {
+            "HTTP/1.1 501 Not Implemented\r\n"
+        };
+
+        connection_.write(text, sizeof(text) - 1);
     }
 }
