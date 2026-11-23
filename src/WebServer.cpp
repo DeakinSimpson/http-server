@@ -35,6 +35,34 @@ namespace http_server
      */
     void WebServer::process_request(std::unique_ptr<OptMsg> request)
     {
+        /* malformed request header */
+        if (!request->has_value())
+        {
+            bad_request(std::move(request));
+            return;
+        }
 
+        const http::Method method {
+            std::get<http::RequestLine>(request->value().start_line).method
+        };
+
+        if (method == http::Method::GET)
+        {
+            std::cout << "GET processing starting..." << std::endl;
+        }
+        else
+        {
+            not_implemented(std::move(request));
+        }
+    }
+
+    void WebServer::bad_request(std::unique_ptr<OptMsg> request)
+    {
+        std::cout << "bad request" << std::endl;
+    }
+
+    void WebServer::not_implemented(std::unique_ptr<OptMsg> request)
+    {
+        std::cout << "not implemented" << std::endl;
     }
 }

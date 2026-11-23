@@ -280,10 +280,7 @@ namespace http_server
 
         const auto fields { get_field_lines() };
 
-        for (auto [key, value] : fields.value())
-        {
-            std::cout << key << ":" << value << std::endl;
-        }
+        /* TODO: add body reading */
 
         return std::make_unique<OptMsg>(http::Message());
     }

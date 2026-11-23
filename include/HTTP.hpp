@@ -229,15 +229,12 @@ namespace http_server::http
 
     };
 
-    class Message
+    struct Message
     {
         std::variant<RequestLine, StatusLine> start_line;
         /* allows for no copying when reading the headers */
         std::vector<std::pair<std::string_view, std::string_view>> field_lines;
         std::vector<std::byte> body;
-
-    public:
-        void read_start_line();
     };
 
 }
