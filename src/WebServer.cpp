@@ -42,6 +42,7 @@ namespace http_server
             return;
         }
 
+        /* TODO: process actualy requests */
         const http::Method method {
             std::get<http::RequestLine>(request->value().start_line).method
         };
@@ -50,7 +51,24 @@ namespace http_server
         {
             std::cout << "GET processing starting..." << std::endl;
 
-            bad_request(std::move(request));
+            /* TODO: implement html disk file serving */
+            char text[] {
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/html; charset=utf-8\r\n"
+                "Content-Length: 102\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "<!DOCTYPE html>\r\n"
+                "<html>\r\n"
+                "<head><title>Test</title></head>\r\n"
+                "<body><h1>Hello World!</h1></body>\r\n"
+                "</html>"
+            };
+
+            connection_.write(text, sizeof(text) - 1);
+
+            std::cout << "Serving html response to: ";
+            connection_.print_client_socket();
         }
         else
         {
@@ -58,7 +76,7 @@ namespace http_server
         }
     }
 
-    void WebServer::bad_request(std::unique_ptr<OptMsg> request)
+    void WebServer::bad_request(std::unique_ptr<OptMsg> request) const
     {
         char text[] {
             "HTTP/1.1 400 Bad Request\r\n"
@@ -75,7 +93,7 @@ namespace http_server
         connection_.write(text, sizeof(text) - 1);
     }
 
-    void WebServer::not_implemented(std::unique_ptr<OptMsg> request)
+    void WebServer::not_implemented(std::unique_ptr<OptMsg> request) const
     {
         char text[] {
             "HTTP/1.1 501 Not Implemented\r\n"
