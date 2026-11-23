@@ -33,6 +33,7 @@ namespace http_server
         void print_client_socket() const;
         void close() const;
         std::unique_ptr<OptMsg> get_request();
+        void write(char* buffer, std::size_t buffer_size) const;
 
     private:
         std::optional<http::RequestLine> get_request_line();

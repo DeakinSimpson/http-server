@@ -284,4 +284,9 @@ namespace http_server
 
         return std::make_unique<OptMsg>(http::Message());
     }
+
+    void Connection::write(char* buffer, const std::size_t buffer_size) const
+    {
+        io_write(client_info_.file_descriptor, buffer, buffer_size);
+    }
 }
