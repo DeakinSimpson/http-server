@@ -81,7 +81,7 @@ namespace http_server
         char text[] {
             "HTTP/1.1 400 Bad Request\r\n"
             "Content-Type: application/json\r\n"
-            "Connection: close"
+            "Connection: close\r\n"
             "Content-Length: 88\r\n"
             "\r\n"
             "{\r\n"
@@ -97,6 +97,9 @@ namespace http_server
     {
         char text[] {
             "HTTP/1.1 501 Not Implemented\r\n"
+            "Content-Length: 0\r\n"
+            "Connection: close\r\n"
+            "\r\n"
         };
 
         connection_.write(text, sizeof(text) - 1);
