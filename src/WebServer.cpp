@@ -16,14 +16,34 @@ namespace http_server
         std::cout << "web server starting..." << std::endl;
         while (true)
         {
-            /* accept the connection from the client */
-            connection_.accept(socket_);
+            try
+            {
+                connection_.accept(socket_);
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "accept error: " << e.what() << '\n';
+                continue;
+            }
 
-            connection_.print_client_socket();
+            try
+            {
+                connection_.print_client_socket();
+                process_request(connection_.get_request());
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "request error: " << e.what() << '\n';
+            }
 
-            process_request(connection_.get_request());
-
-            connection_.close();
+            try
+            {
+                connection_.close();
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "close error: " << e.what() << '\n';
+            }
         }
     }
 

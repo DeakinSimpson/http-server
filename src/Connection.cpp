@@ -182,7 +182,7 @@ namespace http_server
         std::string_view buffer_sv(client_info_.buffer.data(),
             client_info_.buffer.size());
 
-        const auto elements { get_buffer_elements(buffer_sv, line_bytes) };
+        const auto elements { get_buffer_elements(buffer_sv, *line_bytes) };
 
         /* if request line has more then 3 elements, drop */
         if (elements.size() != 3)
@@ -200,8 +200,11 @@ namespace http_server
         }
 
         /* return the http::RequestLine */
-        return http::RequestLine
-            { method.value(), elements[1], elements[2] };
+        return http::RequestLine {
+            method.value(),
+            std::string(elements[1]),
+            std::string(elements[2])
+        };
     }
 
     /**
