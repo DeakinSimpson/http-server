@@ -6,6 +6,10 @@
 #include <functional>
 #include <iostream>
 #include <utility>
+#include <cerrno>
+#include <cstring>
+#include <string>
+#include <system_error>
 
 template <typename F, typename... Args>
 static auto system_error_handle(F&& func,

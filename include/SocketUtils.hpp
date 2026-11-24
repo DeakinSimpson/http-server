@@ -6,6 +6,10 @@
 #include <iostream>
 #include <netdb.h>
 #include <unistd.h>
+#include <algorithm>
+#include <array>
+#include <cerrno>
+#include <cstring>
 
 #include "Debug.hpp"
 #include "ErrorHandle.hpp"

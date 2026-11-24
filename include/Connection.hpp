@@ -7,6 +7,11 @@
 #include "HTTP.hpp"
 #include "SocketUtils.hpp"
 #include "Socket.hpp"
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace http_server
 {

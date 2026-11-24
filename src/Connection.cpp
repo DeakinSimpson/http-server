@@ -280,9 +280,18 @@ namespace http_server
 
         const auto fields { get_field_lines() };
 
+        if (!fields.has_value())
+        {
+            return std::make_unique<OptMsg>(std::nullopt);
+        }
+
+        http::Message message;
+        message.start_line = std::move(*request_line);
+        message.field_lines = std::move(*fields);
+
         /* TODO: add body reading */
 
-        return std::make_unique<OptMsg>(http::Message());
+        return std::make_unique<OptMsg>(std::move(message));
     }
 
     void Connection::write(char* buffer, const std::size_t buffer_size) const
