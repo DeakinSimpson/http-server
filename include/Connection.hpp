@@ -42,7 +42,7 @@ namespace http_server
 
     private:
         std::optional<http::RequestLine> get_request_line();
-        std::size_t read_line();
+        std::optional<std::size_t> read_line();
         void print_buffer() const;
         std::optional<std::vector<std::pair<std::string, std::string>>>
             get_field_lines();
