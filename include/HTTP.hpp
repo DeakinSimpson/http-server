@@ -25,8 +25,8 @@ namespace http_server::http
     struct RequestLine /* for client requests */
     {
         Method              method;     /* http request method */
-        std::string_view    target;     /* path to URI */
-        std::string_view    version;    /* clients http version */
+        std::string         target;     /* path to URI */
+        std::string         version;    /* clients http version */
     };
 
     /**

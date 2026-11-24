@@ -56,7 +56,7 @@ namespace http_server
         while (data.unread_bytes_count <= 0) /* fill the buffer */
         {
             data.unread_bytes_count = read(data.file_descriptor,
-                data.buffer.data(), sizeof(data.buffer.data()));
+                data.buffer.data(), data.buffer.size());
 
             if (data.unread_bytes_count < 0)
             {
