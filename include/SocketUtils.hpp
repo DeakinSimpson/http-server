@@ -10,6 +10,7 @@
 #include <array>
 #include <cerrno>
 #include <cstring>
+#include <expected>
 
 #include "Debug.hpp"
 #include "ErrorHandle.hpp"
@@ -51,7 +52,7 @@ namespace http_server
      * @param n the number of bytes that will be read from the fd buffer
      * @return the number of bytes read (-1 if read error)
      */
-    static ssize_t io_read(IOData& data, char* user_buffer, size_t n)
+    static std::expected<std::size_t, Error> io_read(IOData& data, char* user_buffer, size_t n)
     {
         while (data.unread_bytes_count <= 0) /* fill the buffer */
         {
@@ -66,12 +67,12 @@ namespace http_server
                     std::cerr << "buffer read error: " << strerror(error_code)
                         << std::endl;
 
-                    return -1;
+                    return std::unexpected(Error::ReadError);
                 }
             }
             else if (data.unread_bytes_count == 0) /* EOF */
             {
-                return 0;
+                return std::unexpected(Error::EndOfFile);
             }
             else
             {
@@ -101,12 +102,13 @@ namespace http_server
      * @param max_length the max length the line can be
      * @return the number of bytes in the line
      */
-    static ssize_t io_readline(IOData& data, char* user_buffer, size_t max_length)
+    static std::expected<std::size_t, Error>
+    io_readline(IOData& data, char* user_buffer, size_t max_length)
     {
 
-        size_t  i;
-        int     read_count;
-        char    c;
+        size_t          i;
+        std::expected<std::size_t, Error>     read_count;
+        char            c;
 
         /* read 1 byte at a time until max_length bytes read, EOF or \n */
         for (i = 1; i < max_length; ++i)
@@ -121,17 +123,17 @@ namespace http_server
                     break;
                 }
             }
-            else if (read_count == 0)
+            else if (read_count.error() == Error::EndOfFile)
             {
                 if (i == 1)
                 {
-                    return 0; /* EOF no data read */
+                    return std::unexpected(Error::EndOfFile); /* EOF no data read */
                 }
                 break; /* EOF > 0 bytes read */
             }
             else
             {
-                return -1;
+                return std::unexpected(Error::ReadError);
             }
         }
 

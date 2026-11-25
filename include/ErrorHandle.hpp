@@ -18,6 +18,7 @@ namespace http_server
         BadRequest,
         ParseError,
         EndOfFile,
+        ReadError,
     };
 
     template <typename F, typename... Args>

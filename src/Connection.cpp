@@ -54,24 +54,25 @@ namespace http_server
      */
     std::expected<std::size_t, Error> Connection::read_line()
     {
-        ssize_t num_bytes { io_readline(client_info_.buffer_data,
+        auto num_bytes { io_readline(client_info_.buffer_data,
             client_info_.buffer.data(), MAX_LINE) };
 
-        if (num_bytes < 0)
+        if (num_bytes.has_value())
+        {
+            const std::size_t length
+            { trim_crlf(client_info_.buffer.data(), *num_bytes) };
+
+            return length;
+        }
+        if (num_bytes.error() == Error::ReadError) /* if error */
         {
             throw std::runtime_error("read error");
         }
-        if (num_bytes == 0)
+        if (num_bytes.error() == Error::EndOfFile)
         {
             std::cout << "client connection close\n";
             return std::unexpected(Error::EndOfFile); /* use -1 to define end of file */
         }
-
-        const std::size_t length
-            { trim_crlf(client_info_.buffer.data(),
-                static_cast<std::size_t>(num_bytes)) };
-
-        return length;
     }
 
     /**
