@@ -279,24 +279,19 @@ namespace http_server
      *
      * @return a pointer to an optional message
      */
-    std::unique_ptr<OptMsg> Connection::get_request()
+    std::expected<std::unique_ptr<http::Message>, Error>
+    Connection::get_request()
     {
         const auto request_line { get_request_line() };
-
-        /* if bad request line, return bad message */
         if (!request_line.has_value())
         {
-            return std::make_unique<OptMsg>(std::nullopt);
+            return std::unexpected(request_line.error());
         }
 
-        std::cout << "target: " << request_line->target << ", version: "
-            << request_line->version << std::endl;
-
         const auto fields { get_field_lines() };
-
         if (!fields.has_value())
         {
-            return std::make_unique<OptMsg>(std::nullopt);
+            return std::unexpected(fields.error());
         }
 
         http::Message message;
@@ -305,7 +300,7 @@ namespace http_server
 
         /* TODO: add body reading */
 
-        return std::make_unique<OptMsg>(std::move(message));
+        return std::make_unique<http::Message>(std::move(message));
     }
 
     void Connection::write(char* buffer, const std::size_t buffer_size) const

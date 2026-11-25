@@ -29,7 +29,16 @@ namespace http_server
             try
             {
                 connection_.print_client_socket();
-                process_request(connection_.get_request());
+                auto request { connection_.get_request() };
+
+                if (request.has_value())
+                {
+                    process_request(std::move(request.value()));
+                }
+
+                /* handle error */
+                /* TODO: add std::expected error handling */
+
             }
             catch (const std::exception& e)
             {
@@ -53,18 +62,11 @@ namespace http_server
      *
      * @param request the request to be processed
      */
-    void WebServer::process_request(std::unique_ptr<OptMsg> request)
+    void WebServer::process_request(std::unique_ptr<http::Message> request)
     {
-        /* malformed request header */
-        if (!request->has_value())
-        {
-            bad_request(std::move(request));
-            return;
-        }
-
         /* TODO: process actualy requests */
         const http::Method method {
-            std::get<http::RequestLine>(request->value().start_line).method
+            std::get<http::RequestLine>(request->start_line).method
         };
 
         if (method == http::Method::GET)
@@ -96,7 +98,7 @@ namespace http_server
         }
     }
 
-    void WebServer::bad_request(std::unique_ptr<OptMsg> request) const
+    void WebServer::bad_request(std::unique_ptr<http::Message> request) const
     {
         char text[] {
             "HTTP/1.1 400 Bad Request\r\n"
@@ -113,7 +115,7 @@ namespace http_server
         connection_.write(text, sizeof(text) - 1);
     }
 
-    void WebServer::not_implemented(std::unique_ptr<OptMsg> request) const
+    void WebServer::not_implemented(std::unique_ptr<http::Message> request) const
     {
         char text[] {
             "HTTP/1.1 501 Not Implemented\r\n"

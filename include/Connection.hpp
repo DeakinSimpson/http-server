@@ -27,10 +27,6 @@ namespace http_server
         IOData                          buffer_data             {};
     };
 
-
-
-    using OptMsg = std::optional<http::Message>;
-
     class Connection
     {
         ConnectionInfo client_info_;
@@ -40,7 +36,7 @@ namespace http_server
         void accept(const Socket& socket);
         void print_client_socket() const;
         void close() const;
-        std::unique_ptr<OptMsg> get_request();
+        std::expected<std::unique_ptr<http::Message>, Error> get_request();
         void write(char* buffer, std::size_t buffer_size) const;
 
     private:
