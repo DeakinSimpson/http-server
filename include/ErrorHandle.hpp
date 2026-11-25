@@ -13,6 +13,11 @@
 
 namespace http_server
 {
+    enum class Error
+    {
+        BadRequest,
+    };
+
     template <typename F, typename... Args>
     static auto system_error_handle(F&& func,
         const std::string& error_msg, Args&&... args)

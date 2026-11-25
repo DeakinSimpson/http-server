@@ -173,7 +173,7 @@ namespace http_server
      *
      * @return request line, if the request_line read was valid
      */
-    std::optional<http::RequestLine> Connection::get_request_line()
+    std::expected<http::RequestLine, Error> Connection::get_request_line()
     {
         /* read the request line into the buffer */
         auto line_bytes { read_line() };
@@ -187,7 +187,7 @@ namespace http_server
         /* if request line has more then 3 elements, drop */
         if (elements.size() != 3)
         {
-            return std::nullopt;
+            return std::unexpected(Error::BadRequest);
         }
 
         /* get the method from the first element */
@@ -196,7 +196,7 @@ namespace http_server
         /* was the method given a valid method? */
         if (!method.has_value())
         {
-            return std::nullopt;
+            return std::unexpected(Error::BadRequest);
         }
 
         /* return the http::RequestLine */

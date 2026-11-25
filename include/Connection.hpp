@@ -12,6 +12,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <expected>
 
 namespace http_server
 {
@@ -43,7 +44,7 @@ namespace http_server
         void write(char* buffer, std::size_t buffer_size) const;
 
     private:
-        std::optional<http::RequestLine> get_request_line();
+        std::expected<http::RequestLine, Error> get_request_line();
         std::optional<std::size_t> read_line();
         void print_buffer() const;
         std::optional<std::vector<std::pair<std::string, std::string>>>
