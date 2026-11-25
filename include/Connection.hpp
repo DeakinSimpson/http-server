@@ -47,7 +47,7 @@ namespace http_server
         std::expected<http::RequestLine, Error> get_request_line();
         std::expected<std::size_t, Error> read_line();
         void print_buffer() const;
-        std::optional<std::vector<std::pair<std::string, std::string>>>
+        std::expected<std::vector<std::pair<std::string, std::string>>, Error>
             get_field_lines();
     };
 }

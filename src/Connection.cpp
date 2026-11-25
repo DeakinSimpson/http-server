@@ -218,7 +218,7 @@ namespace http_server
      *
      * @return optionally a vector of field-name : field-value pairs
      */
-    std::optional<std::vector<std::pair<std::string, std::string>>>
+    std::expected<std::vector<std::pair<std::string, std::string>>, Error>
     Connection::get_field_lines()
     {
         std::vector<std::pair<std::string, std::string>> result;
@@ -229,7 +229,7 @@ namespace http_server
 
             if (!line_bytes.has_value())
             {
-                return std::nullopt;
+                return std::unexpected(line_bytes.error());
             }
 
             if (*line_bytes == 0) break; /* end of headers */
@@ -241,7 +241,7 @@ namespace http_server
             /* if unable to find colon, or no field-name */
             if (colon == std::string_view::npos || colon == 0)
             {
-                return std::nullopt;
+                return std::unexpected(Error::ParseError);
             }
 
             /* get the field-name (everything before colon) */
@@ -250,7 +250,7 @@ namespace http_server
             /* if field_name contains whitespaces, error */
             if (field_name.find_first_of(" \t") != std::string_view::npos)
             {
-                return std::nullopt;
+                return std::unexpected(Error::ParseError);
             }
 
             /* get value after the name */
