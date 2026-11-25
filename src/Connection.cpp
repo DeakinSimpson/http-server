@@ -52,7 +52,7 @@ namespace http_server
      *
      * @return the number of bytes in the line after trimming \r\n
      */
-    std::optional<std::size_t> Connection::read_line()
+    std::expected<std::size_t, Error> Connection::read_line()
     {
         ssize_t num_bytes { io_readline(client_info_.buffer_data,
             client_info_.buffer.data(), MAX_LINE) };
@@ -64,7 +64,7 @@ namespace http_server
         if (num_bytes == 0)
         {
             std::cout << "client connection close\n";
-            return std::nullopt; /* use -1 to define end of file */
+            return std::unexpected(Error::EndOfFile); /* use -1 to define end of file */
         }
 
         const std::size_t length
@@ -177,6 +177,11 @@ namespace http_server
     {
         /* read the request line into the buffer */
         auto line_bytes { read_line() };
+
+        if (!line_bytes.has_value())
+        {
+            return std::unexpected(line_bytes.error());
+        }
 
         /* use a string_view to represent the buffer */
         std::string_view buffer_sv(client_info_.buffer.data(),

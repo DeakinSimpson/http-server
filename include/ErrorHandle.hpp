@@ -16,6 +16,8 @@ namespace http_server
     enum class Error
     {
         BadRequest,
+        ParseError,
+        EndOfFile,
     };
 
     template <typename F, typename... Args>
