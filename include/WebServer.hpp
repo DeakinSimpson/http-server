@@ -6,6 +6,7 @@
 #include "Connection.hpp"
 #include "HTTP.hpp"
 #include "Socket.hpp"
+#include <filesystem>
 
 namespace http_server
 {
@@ -13,8 +14,10 @@ namespace http_server
     {
         Socket socket_;
         Connection connection_ {};
+        std::filesystem::path root_ {};
     public:
-        explicit WebServer(const char* port) : socket_{ port }
+        explicit WebServer(const char* port, std::filesystem::path root_path)
+            : socket_{ port }, root_ { std::move(root_path) }
         {  }
 
         void start();
