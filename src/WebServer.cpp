@@ -37,7 +37,19 @@ namespace http_server
                 }
 
                 /* handle error */
-                /* TODO: add std::expected error handling */
+                else
+                {
+                    /* although this is the same, this will be updated later */
+                    switch (request.error())
+                    {
+                    case Error::BadRequest:
+                        bad_request(std::move(*request));
+                    case Error::ParseError:
+                        bad_request(std::move(*request));
+                    default:
+                        bad_request(std::move(*request));
+                    }
+                }
 
             }
             catch (const std::exception& e)
