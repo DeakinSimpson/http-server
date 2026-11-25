@@ -26,6 +26,8 @@ namespace http_server
         IOData                          buffer_data             {};
     };
 
+
+
     using OptMsg = std::optional<http::Message>;
 
     class Connection
