@@ -23,7 +23,7 @@ namespace http_server
         void start();
         void process_request(std::unique_ptr<http::Message> request);
     private:
-        void bad_request(std::unique_ptr<http::Message> request) const;
-        void not_implemented(std::unique_ptr<http::Message> request) const;
+        void bad_request() const;
+        void not_implemented() const;
     };
 }

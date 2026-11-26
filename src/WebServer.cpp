@@ -43,11 +43,11 @@ namespace http_server
                     switch (request.error())
                     {
                     case Error::BadRequest:
-                        bad_request(std::move(*request));
+                        bad_request();
                     case Error::ParseError:
-                        bad_request(std::move(*request));
+                        bad_request();
                     default:
-                        bad_request(std::move(*request));
+                        bad_request();
                     }
                 }
 
@@ -68,6 +68,19 @@ namespace http_server
         }
     }
 
+
+    static std::expected<http::Message, Error> build_get(
+        std::unique_ptr<http::Message> request)
+    {
+        return std::unexpected(Error::BadRequest);
+    }
+
+    static char* build_response(const http::Message& response)
+    {
+        char result[] { "" };
+        return result;
+    }
+
     /**
      * this function will take in a request then create a response or drop it
      * based on its contents.
@@ -83,34 +96,29 @@ namespace http_server
 
         if (method == http::Method::GET)
         {
+
             std::cout << "GET processing starting..." << std::endl;
 
-            /* TODO: implement html disk file serving */
-            char text[] {
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/html; charset=utf-8\r\n"
-                "Content-Length: 102\r\n"
-                "Connection: close\r\n"
-                "\r\n"
-                "<!DOCTYPE html>\r\n"
-                "<html>\r\n"
-                "<head><title>Test</title></head>\r\n"
-                "<body><h1>Hello World!</h1></body>\r\n"
-                "</html>"
-            };
+            const auto response { build_get(std::move(request)) };
 
-            connection_.write(text, sizeof(text) - 1);
+            if (!response.has_value())
+            {
+                bad_request();
+                return;
+            }
+
+            connection_.write(build_response(*response), sizeof(*response) - 1);
 
             std::cout << "Serving html response to: ";
             connection_.print_client_socket();
         }
         else
         {
-            not_implemented(std::move(request));
+            not_implemented();
         }
     }
 
-    void WebServer::bad_request(std::unique_ptr<http::Message> request) const
+    void WebServer::bad_request() const
     {
         char text[] {
             "HTTP/1.1 400 Bad Request\r\n"
@@ -127,7 +135,7 @@ namespace http_server
         connection_.write(text, sizeof(text) - 1);
     }
 
-    void WebServer::not_implemented(std::unique_ptr<http::Message> request) const
+    void WebServer::not_implemented() const
     {
         char text[] {
             "HTTP/1.1 501 Not Implemented\r\n"
