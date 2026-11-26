@@ -71,7 +71,7 @@ namespace http_server
         if (num_bytes.error() == Error::EndOfFile)
         {
             std::cout << "client connection close\n";
-            return std::unexpected(Error::EndOfFile); /* use -1 to define end of file */
+            return std::unexpected(Error::EndOfFile);
         }
     }
 

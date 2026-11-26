@@ -35,20 +35,9 @@ namespace http_server
                 {
                     process_request(std::move(request.value()));
                 }
-
-                /* handle error */
-                else
+                else /* handle error */
                 {
-                    /* although this is the same, this will be updated later */
-                    switch (request.error())
-                    {
-                    case Error::BadRequest:
-                        bad_request();
-                    case Error::ParseError:
-                        bad_request();
-                    default:
-                        bad_request();
-                    }
+                    bad_request();
                 }
 
             }
@@ -77,7 +66,14 @@ namespace http_server
 
     static char* build_response(const http::Message& response)
     {
-        char result[] { "" };
+        char result[]
+        {
+            "<!DOCTYPE html>\r\n"
+            "<html>\r\n"
+            "<head><title>Test</title></head>\r\n"
+            "<body><h1>Hello World!</h1></body>\r\n"
+            "</html>\r\n"
+        };
         return result;
     }
 
@@ -89,32 +85,35 @@ namespace http_server
      */
     void WebServer::process_request(std::unique_ptr<http::Message> request)
     {
-        /* TODO: process actualy requests */
+        /* get the method and build response based on method */
         const http::Method method {
             std::get<http::RequestLine>(request->start_line).method
         };
 
-        if (method == http::Method::GET)
+        /* get the response */
+        std::expected<http::Message, Error> response;
+        switch (method)
         {
-
-            std::cout << "GET processing starting..." << std::endl;
-
-            const auto response { build_get(std::move(request)) };
-
-            if (!response.has_value())
-            {
-                bad_request();
-                return;
-            }
-
-            connection_.write(build_response(*response), sizeof(*response) - 1);
-
-            std::cout << "Serving html response to: ";
-            connection_.print_client_socket();
-        }
-        else
-        {
+        case http::Method::GET:
+            response = build_get(std::move(request));
+            break;
+        default:
             not_implemented();
+            return;
+        }
+
+        /* if response successfully built write and exit */
+        if (response.has_value())
+        {
+            connection_.write(build_response(*response), sizeof(*response) - 1);
+            return;
+        }
+
+        /* TODO: Update to handle more then just bad_request */
+        switch (response.error())
+        {
+        default:
+            bad_request();
         }
     }
 
