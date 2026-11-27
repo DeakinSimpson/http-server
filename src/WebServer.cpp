@@ -79,6 +79,7 @@ namespace http_server
             std::get<http::RequestLine>(request->start_line).target
         };
 
+        /* if client is requesting root server index.html */
         if (target == "/")
         {
             target = target / "index.html";
@@ -94,21 +95,37 @@ namespace http_server
         }
 
         /* read file */
-        std::ifstream file(filepath);
+        std::ifstream file{filepath, std::ios::binary};
 
         /* check that the file is open */
-        if (!file.is_open())
+        if (!file.good())
         {
             return http_error(http::StatusCode::Not_Found, "cannot open file");
         }
 
-        /* get the ostringstream from the file */
-        std::ostringstream ss;
-        ss << file.rdbuf();
+        auto length { std::filesystem::file_size(filepath) };
+        std::vector<std::byte> bytes(length);
+        file.read(  reinterpret_cast<char*>(bytes.data()),
+                    static_cast<long>(length));
 
-        std::cout << filepath.string() << ":\n" << ss.str() << std::endl;
+        response.body = std::move(bytes);
 
         return http_error(http::StatusCode::Not_Implemented, "TESTING");
+    }
+
+    std::vector<std::byte> get_contents(const std::string &path)
+    {
+        std::ifstream source_file { path, std::ios::binary };
+        if (!source_file.good())
+        {
+            std::cerr << "unable to open source fle" << std::endl;
+        }
+
+        auto length { std::filesystem::file_size(path) };
+        std::vector<std::byte> result(length);
+        source_file.read( reinterpret_cast<char*>(result.data()), static_cast<long>(length) );
+
+        return result;
     }
 
     /**
@@ -171,6 +188,11 @@ namespace http_server
         return out;
     }
 
+    /**
+     * gets the message and serializes it to a std::string
+     *
+     * @param message the message to be sent to the client
+     */
     void WebServer::send(const http::Message& message)
     {
         auto bytes { serialize(message) };
