@@ -36,14 +36,14 @@ namespace http_server
         void accept(const Socket& socket);
         void print_client_socket() const;
         void close() const;
-        std::expected<std::unique_ptr<http::Message>, Error> get_request();
+        std::expected<std::unique_ptr<http::Message>, RequestError> get_request();
         void write(char* buffer, std::size_t buffer_size) const;
 
     private:
-        std::expected<http::RequestLine, Error> get_request_line();
-        std::expected<std::size_t, Error> read_line();
+        std::expected<http::RequestLine, RequestError> get_request_line();
+        std::expected<std::size_t, ConnectionError> read_line();
         void print_buffer() const;
-        std::expected<std::vector<std::pair<std::string, std::string>>, Error>
+        std::expected<std::vector<std::pair<std::string, std::string>>, RequestError>
             get_field_lines();
     };
 }

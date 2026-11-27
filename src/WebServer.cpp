@@ -58,10 +58,28 @@ namespace http_server
     }
 
 
-    static std::expected<http::Message, Error> build_get(
+    static std::expected<http::Message, HttpError> build_get(
         std::unique_ptr<http::Message> request)
     {
-        return std::unexpected(Error::BadRequest);
+        /* create response start_line */
+        http::Message response {};
+        response.start_line = http::StatusLine{
+            "HTTP/1.1", http::StatusCode::Ok, "OK"
+        };
+
+        /* get the filepath */
+        const std::filesystem::path filepath {
+            std::get<http::RequestLine>(request->start_line).target
+        };
+
+        /* check that the filepath exists */
+        if (!std::filesystem::exists(filepath))
+        {
+            return http_error(http::StatusCode::Not_Found,
+                std::format("{} not found", filepath.string()));
+        }
+
+        return http_error(http::StatusCode::Not_Implemented, "TESTING");
     }
 
     static char* build_response(const http::Message& response)
@@ -91,7 +109,7 @@ namespace http_server
         };
 
         /* get the response */
-        std::expected<http::Message, Error> response;
+        std::expected<http::Message, HttpError> response;
         switch (method)
         {
         case http::Method::GET:
@@ -110,7 +128,7 @@ namespace http_server
         }
 
         /* TODO: Update to handle more then just bad_request */
-        switch (response.error())
+        switch (response.error().status)
         {
         default:
             bad_request();

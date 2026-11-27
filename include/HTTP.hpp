@@ -226,7 +226,8 @@ namespace http_server::http
     struct StatusLine /* for server responses */
     {
         std::string version;
-
+        StatusCode status_code;
+        std::string reason_phrase;
     };
 
     struct Message

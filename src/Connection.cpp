@@ -52,7 +52,7 @@ namespace http_server
      *
      * @return the number of bytes in the line after trimming \r\n
      */
-    std::expected<std::size_t, Error> Connection::read_line()
+    std::expected<std::size_t, ConnectionError> Connection::read_line()
     {
         auto num_bytes { io_readline(client_info_.buffer_data,
             client_info_.buffer.data(), MAX_LINE) };
@@ -64,14 +64,14 @@ namespace http_server
 
             return length;
         }
-        if (num_bytes.error() == Error::ReadError) /* if error */
+        if (num_bytes.error() == ConnectionError::ReadError) /* if error */
         {
             throw std::runtime_error("read error");
         }
-        if (num_bytes.error() == Error::EndOfFile)
+        if (num_bytes.error() == ConnectionError::Closed)
         {
             std::cout << "client connection close\n";
-            return std::unexpected(Error::EndOfFile);
+            return std::unexpected(ConnectionError::ReadError);
         }
     }
 
@@ -174,7 +174,7 @@ namespace http_server
      *
      * @return request line, if the request_line read was valid
      */
-    std::expected<http::RequestLine, Error> Connection::get_request_line()
+    std::expected<http::RequestLine, RequestError> Connection::get_request_line()
     {
         /* read the request line into the buffer */
         auto line_bytes { read_line() };
@@ -193,7 +193,7 @@ namespace http_server
         /* if request line has more then 3 elements, drop */
         if (elements.size() != 3)
         {
-            return std::unexpected(Error::BadRequest);
+            return http_error(http::StatusCode::Bad_Request, "malformed headers");
         }
 
         /* get the method from the first element */
@@ -202,7 +202,7 @@ namespace http_server
         /* was the method given a valid method? */
         if (!method.has_value())
         {
-            return std::unexpected(Error::BadRequest);
+            return http_error(http::StatusCode::Not_Implemented, "Unknown Method");
         }
 
         /* return the http::RequestLine */
@@ -219,7 +219,7 @@ namespace http_server
      *
      * @return optionally a vector of field-name : field-value pairs
      */
-    std::expected<std::vector<std::pair<std::string, std::string>>, Error>
+    std::expected<std::vector<std::pair<std::string, std::string>>, RequestError>
     Connection::get_field_lines()
     {
         std::vector<std::pair<std::string, std::string>> result;
@@ -242,7 +242,7 @@ namespace http_server
             /* if unable to find colon, or no field-name */
             if (colon == std::string_view::npos || colon == 0)
             {
-                return std::unexpected(Error::ParseError);
+                return http_error(http::StatusCode::Bad_Request, "malformed header");
             }
 
             /* get the field-name (everything before colon) */
@@ -251,7 +251,7 @@ namespace http_server
             /* if field_name contains whitespaces, error */
             if (field_name.find_first_of(" \t") != std::string_view::npos)
             {
-                return std::unexpected(Error::ParseError);
+                return http_error(http::StatusCode::Bad_Request, "malformed header");
             }
 
             /* get value after the name */
@@ -280,7 +280,7 @@ namespace http_server
      *
      * @return a pointer to an optional message
      */
-    std::expected<std::unique_ptr<http::Message>, Error>
+    std::expected<std::unique_ptr<http::Message>, RequestError>
     Connection::get_request()
     {
         const auto request_line { get_request_line() };

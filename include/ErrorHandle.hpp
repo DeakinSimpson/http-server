@@ -11,15 +11,29 @@
 #include <string>
 #include <system_error>
 
+#include "HTTP.hpp"
+
 namespace http_server
 {
-    enum class Error
+    enum class ConnectionError
     {
-        BadRequest,
-        ParseError,
-        EndOfFile,
+        Closed,
         ReadError,
     };
+
+    struct HttpError
+    {
+        http::StatusCode    status;
+        std::string         detail;
+    };
+
+    using RequestError = std::variant<ConnectionError, HttpError>;
+
+    inline std::unexpected<HttpError> http_error(http::StatusCode status,
+        std::string detail = {})
+    {
+        return std::unexpected(HttpError{ status, std::move(detail) });
+    }
 
     template <typename F, typename... Args>
     static auto system_error_handle(F&& func,
