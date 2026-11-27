@@ -110,7 +110,7 @@ namespace http_server
 
         response.body = std::move(bytes);
 
-        return http_error(http::StatusCode::Not_Implemented, "TESTING");
+        return response;
     }
 
     std::vector<std::byte> get_contents(const std::string &path)
