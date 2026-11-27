@@ -57,22 +57,12 @@ namespace http_server
         auto num_bytes { io_readline(client_info_.buffer_data,
             client_info_.buffer.data(), MAX_LINE) };
 
-        if (num_bytes.has_value())
+        if (!num_bytes.has_value())
         {
-            const std::size_t length
-            { trim_crlf(client_info_.buffer.data(), *num_bytes) };
-
-            return length;
+            return std::unexpected(num_bytes.error());
         }
-        if (num_bytes.error() == ConnectionError::ReadError) /* if error */
-        {
-            throw std::runtime_error("read error");
-        }
-        if (num_bytes.error() == ConnectionError::Closed)
-        {
-            std::cout << "client connection close\n";
-            return std::unexpected(ConnectionError::ReadError);
-        }
+            
+        return trim_crlf(client_info_.buffer.data(), *num_bytes);
     }
 
     /**
