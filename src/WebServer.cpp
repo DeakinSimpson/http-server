@@ -113,21 +113,6 @@ namespace http_server
         return response;
     }
 
-    std::vector<std::byte> get_contents(const std::string &path)
-    {
-        std::ifstream source_file { path, std::ios::binary };
-        if (!source_file.good())
-        {
-            std::cerr << "unable to open source fle" << std::endl;
-        }
-
-        auto length { std::filesystem::file_size(path) };
-        std::vector<std::byte> result(length);
-        source_file.read( reinterpret_cast<char*>(result.data()), static_cast<long>(length) );
-
-        return result;
-    }
-
     /**
      * this function will take in a request then create a response or drop it
      * based on its contents.
