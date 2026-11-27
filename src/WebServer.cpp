@@ -75,11 +75,14 @@ namespace http_server
         };
 
         /* get the filepath */
-        const std::filesystem::path target {
+        std::filesystem::path target {
             std::get<http::RequestLine>(request->start_line).target
         };
 
-        std::cout << "target: " << target.string() << std::endl;
+        if (target == "/")
+        {
+            target = target / "index.html";
+        }
 
         const auto filepath { root_ / target.relative_path() };
 
