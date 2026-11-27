@@ -133,7 +133,7 @@ namespace http_server
             }
             else
             {
-                return std::unexpected(ConnectionError::Closed);
+                return std::unexpected(read_count.error());
             }
         }
 
