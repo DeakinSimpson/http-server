@@ -416,4 +416,23 @@ namespace http_server
         /* return bytes written */
         return static_cast<ssize_t>(num_bytes);
     }
+
+    inline http::Message error_response(const HttpError& error)
+    {
+        std::cerr << "http error: " << error.detail << std::endl;
+        auto [code, detail] { http::get_status_code(error.status) };
+        const std::string json_body {
+            std::format(R"({{"status":{},"error":"{}"}})", code, detail)
+        };
+
+        http::Message message {};
+        message.start_line = http::StatusLine{ "HTTP/1.1", error.status, detail };
+        message.field_lines = { {"Content-Type", "application/json"} };
+
+        /* move the json body to the message body */
+        const auto* p { reinterpret_cast<const std::byte*>(json_body.data()) };
+        message.body.assign(p, p + json_body.size());
+
+        return message;
+    }
 }

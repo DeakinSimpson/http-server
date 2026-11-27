@@ -5,6 +5,7 @@
 #include "../include/WebServer.hpp"
 
 #include "HTTP.hpp"
+#include <format>
 
 namespace http_server
 {
@@ -35,9 +36,13 @@ namespace http_server
                 {
                     process_request(std::move(request.value()));
                 }
-                else /* handle error */
+                else if (const auto* http = std::get_if<HttpError>(&request.error()))
                 {
-                    bad_request();
+                    send(error_response(*http));
+                }
+                else
+                {
+                    std::cout << "client disconnected\n";
                 }
 
             }
@@ -82,19 +87,6 @@ namespace http_server
         return http_error(http::StatusCode::Not_Implemented, "TESTING");
     }
 
-    static char* build_response(const http::Message& response)
-    {
-        char result[]
-        {
-            "<!DOCTYPE html>\r\n"
-            "<html>\r\n"
-            "<head><title>Test</title></head>\r\n"
-            "<body><h1>Hello World!</h1></body>\r\n"
-            "</html>\r\n"
-        };
-        return result;
-    }
-
     /**
      * this function will take in a request then create a response or drop it
      * based on its contents.
@@ -116,51 +108,48 @@ namespace http_server
             response = build_get(std::move(request));
             break;
         default:
-            not_implemented();
-            return;
+            response = http_error(
+                http::StatusCode::Not_Implemented, "method not supported");
         }
 
-        /* if response successfully built write and exit */
-        if (response.has_value())
-        {
-            connection_.write(build_response(*response), sizeof(*response) - 1);
-            return;
-        }
-
-        /* TODO: Update to handle more then just bad_request */
-        switch (response.error().status)
-        {
-        default:
-            bad_request();
-        }
+        send(response ? *response : error_response(response.error()));
     }
 
-    void WebServer::bad_request() const
+    /**
+     * Takes int message and returns the serialized string
+     *
+     * @param message the message to be converted to a string
+     * @return the string version of the message
+     */
+    std::string serialize(const http::Message& message)
     {
-        char text[] {
-            "HTTP/1.1 400 Bad Request\r\n"
-            "Content-Type: application/json\r\n"
-            "Connection: close\r\n"
-            "Content-Length: 88\r\n"
-            "\r\n"
-            "{\r\n"
-            "  \"error\": \"Bad request\",\r\n"
-            "  \"message\": \"Request body could not be read properly.\"\r\n"
-            "}"
-        };
+        const auto& line { std::get<http::StatusLine>(message.start_line) };
+        auto [code, detail] { http::get_status_code(line.status_code) };
 
-        connection_.write(text, sizeof(text) - 1);
+        /* create status line */
+        std::string out { std::format("{} {} {}\r\n", line.version, code, detail) };
+
+        /* add field lines */
+        for (const auto& [name, value] : message.field_lines)
+        {
+            out += std::format("{}: {}\r\n", name, value);
+        }
+
+        /* add length and connection close */
+        out += std::format(
+            "Content-Length: {}\r\nConnection: close\r\n\r\n",
+            message.body.size());
+
+        /* convert std::vector<std::byte> to char* */
+        out.append(reinterpret_cast<const char*>(
+            message.body.data()), message.body.size());
+
+        return out;
     }
 
-    void WebServer::not_implemented() const
+    void WebServer::send(const http::Message& message)
     {
-        char text[] {
-            "HTTP/1.1 501 Not Implemented\r\n"
-            "Content-Length: 0\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-        };
-
-        connection_.write(text, sizeof(text) - 1);
+        auto bytes { serialize(message) };
+        connection_.write(bytes.data(), bytes.size());
     }
 }
