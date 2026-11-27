@@ -24,5 +24,7 @@ namespace http_server
         void process_request(std::unique_ptr<http::Message> request);
     private:
         void send(const http::Message& message);
+        std::expected<http::Message, HttpError> build_get(
+            std::unique_ptr<http::Message> request);
     };
 }

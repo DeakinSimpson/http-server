@@ -6,6 +6,8 @@
 
 #include "HTTP.hpp"
 #include <format>
+#include <fstream>
+#include <sstream>
 
 namespace http_server
 {
@@ -63,7 +65,7 @@ namespace http_server
     }
 
 
-    static std::expected<http::Message, HttpError> build_get(
+    std::expected<http::Message, HttpError> WebServer::build_get(
         std::unique_ptr<http::Message> request)
     {
         /* create response start_line */
@@ -73,9 +75,13 @@ namespace http_server
         };
 
         /* get the filepath */
-        const std::filesystem::path filepath {
+        const std::filesystem::path target {
             std::get<http::RequestLine>(request->start_line).target
         };
+
+        std::cout << "target: " << target.string() << std::endl;
+
+        const auto filepath { root_ / target.relative_path() };
 
         /* check that the filepath exists */
         if (!std::filesystem::exists(filepath))
@@ -83,6 +89,21 @@ namespace http_server
             return http_error(http::StatusCode::Not_Found,
                 std::format("{} not found", filepath.string()));
         }
+
+        /* read file */
+        std::ifstream file(filepath);
+
+        /* check that the file is open */
+        if (!file.is_open())
+        {
+            return http_error(http::StatusCode::Not_Found, "cannot open file");
+        }
+
+        /* get the ostringstream from the file */
+        std::ostringstream ss;
+        ss << file.rdbuf();
+
+        std::cout << filepath.string() << ":\n" << ss.str() << std::endl;
 
         return http_error(http::StatusCode::Not_Implemented, "TESTING");
     }
